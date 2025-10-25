@@ -1,0 +1,99 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+
+column_names = [
+ 'age', 'workclass', 'fnlwgt', 'education', 'education-num',
+     'marital-status', 'occupation', 'relationship', 'race', 'sex',
+     'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'income'
+]
+
+try:
+   data = pd.read_csv('adult.csv')
+except:
+   data = pd.read_csv('adult.data', header=None, names=column_names)
+
+print("\nFirst 5 rows of the dataset:")
+print(data.head())
+
+for col in data.columns:
+    if data[col].dtype == 'object':
+        data[col] = data[col].str.strip()
+
+data.replace('?', np.nan, inplace=True)
+
+data.dropna(inplace=True)
+
+label_encoders = {}
+for column in data.select_dtypes(include=['object']).columns:
+    le = LabelEncoder()
+    data[column] = le.fit_transform(data[column])
+    label_encoders[column] = le
+
+print("\nData after preprocessing:")
+print(data.head())
+
+X = data.drop('income', axis=1)
+y = data['income']
+
+X_train, X_test, y_train, y_test = train_test_split(
+   X, y, test_size=0.3, random_state=42
+)
+
+boost_model = AdaBoostClassifier(
+    n_estimators=100,
+    learning_rate=1.0,
+    random_state=42
+)
+boost_model.fit(X_train, y_train)
+y_pred_boost = boost_model.predict(X_test)
+
+print("\n=== Boosting (AdaBoost) Performance ===")
+print("Accuracy:", accuracy_score(y_test, y_pred_boost))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_boost))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_boost))
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(data.corr(), annot=False, cmap='coolwarm')
+plt.title('Correlation Heatmap of Features')
+plt.show()
+
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+y_pred_rf = rf_model.predict(X_test)
+
+print("\n=== Random Forest Performance (for Comparison) ===")
+print("Accuracy:", accuracy_score(y_test, y_pred_rf))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_rf))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_rf))
+
+acc_boost = accuracy_score(y_test, y_pred_boost)
+acc_rf = accuracy_score(y_test, y_pred_rf)
+
+print("\n=== Comparison Summary ===")
+print(f"Boosting Accuracy (AdaBoost): {acc_boost:.4f}")
+print(f"Random Forest Accuracy: {acc_rf:.4f}")
+
+if acc_boost > acc_rf:
+     print("✅ Boosting performs slightly better than Random Forest.")
+else:
+ print("✅ Random Forest performs slightly better than Boosting.")
+
+
+
+
+
+pip install pandas numpy scikit-learn matplotlib
+
+
+pip3 install scikit-learn
+pip install scikit-learn
+pip install matplotlib numpy
+python mlpract.py
+
+

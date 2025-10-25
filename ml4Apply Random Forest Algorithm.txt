@@ -1,0 +1,114 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import (
+   accuracy_score, confusion_matrix, classification_report
+)
+
+# Column names (for adult.data if needed)
+column_names = [
+     'age', 'workclass', 'fnlwgt', 'education', 'education-num',
+     'marital-status', 'occupation', 'relationship', 'race', 'sex',
+     'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'income'
+]
+
+# Load dataset
+try:
+   data = pd.read_csv('adult.csv')
+except:
+   data = pd.read_csv('adult.data', header=None, names=column_names)
+
+print("\nFirst 5 rows of dataset:")
+print(data.head())
+
+# Clean data
+for col in data.columns:
+    if data[col].dtype == 'object':
+         data[col] = data[col].str.strip()
+
+data.replace('?', np.nan, inplace=True)
+print("\nMissing values per column:")
+print(data.isnull().sum())
+
+data.dropna(inplace=True)
+
+# ✅ Label Encoding for all categorical columns
+label_encoders = {}
+for column in data.select_dtypes(include=['object']).columns:
+    le = LabelEncoder()
+    data[column] = le.fit_transform(data[column])
+    label_encoders[column] = le
+
+print("\nData after encoding:")
+print(data.head())
+
+# Split data
+X = data.drop('income', axis=1)
+y = data['income']
+X_train, X_test, y_train, y_test = train_test_split(
+   X, y, test_size=0.3, random_state=42
+)
+
+# 🌲 Random Forest Classifier
+rf = RandomForestClassifier(
+    n_estimators=100,
+    criterion='gini',
+    max_depth=None,
+    random_state=42
+)
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+
+# 🌳 Decision Tree Classifier
+dt = DecisionTreeClassifier(random_state=42)
+dt.fit(X_train, y_train)
+y_pred_dt = dt.predict(X_test)
+
+# === Performance ===
+rf_acc = accuracy_score(y_test, y_pred_rf)
+dt_acc = accuracy_score(y_test, y_pred_dt)
+
+print("\n=== Random Forest Performance ===")
+print(f"Accuracy: {rf_acc:.4f}")
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_rf))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_rf))
+
+print("\n=== Decision Tree Performance ===")
+print(f"Accuracy: {dt_acc:.4f}")
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_dt))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_dt))
+
+# 🔥 Comparison Summary
+print("\n=== Comparison Summary ===")
+print(f"Random Forest Accuracy: {rf_acc:.4f}")
+print(f"Decision Tree Accuracy: {dt_acc:.4f}")
+
+if rf_acc > dt_acc:
+    print("\n✅ Random Forest performs better than Decision Tree.")
+elif rf_acc < dt_acc:
+    print("\n⚠️ Decision Tree performs better than Random Forest.")
+else:
+    print("\n🤝 Both models perform equally well.")
+
+# 📊 Optional: Correlation Heatmap
+plt.figure(figsize=(12, 8))
+sns.heatmap(data.corr(), annot=False, cmap='coolwarm')
+plt.title('Correlation Heatmap of Features')
+plt.show()
+
+
+
+
+
+pip install pandas numpy scikit-learn matplotlib
+
+
+pip3 install scikit-learn
+pip install scikit-learn
+pip install matplotlib numpy
+python mlpract.py
